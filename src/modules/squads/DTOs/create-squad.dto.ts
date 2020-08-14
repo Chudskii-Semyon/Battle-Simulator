@@ -1,5 +1,6 @@
 import { Expose } from 'class-transformer';
-import { IsNumber, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsEnum, IsNumber, IsString, MaxLength, MinLength } from 'class-validator';
+import { StrategyEnum } from '../../../enums/strategy.enum';
 
 export class CreateSquadDto {
   @Expose()
@@ -11,4 +12,8 @@ export class CreateSquadDto {
   @MinLength(3)
   @MaxLength(30)
   public name: string;
+
+  @Expose()
+  @IsEnum(StrategyEnum)
+  public strategy: StrategyEnum;
 }
