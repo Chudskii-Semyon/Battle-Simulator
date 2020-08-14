@@ -35,4 +35,8 @@ export class Vehicle extends BaseUnit {
     const healthPoints = this.operators.map(operator => operator.getTotalHealthPoints());
     return sum(healthPoints);
   }
+
+  getType(): string {
+    return this.constructor.name;
+  }
 }

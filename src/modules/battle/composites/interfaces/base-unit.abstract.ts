@@ -57,4 +57,8 @@ export class BaseUnit implements Unit {
   getRechargeTime(): number {
     return this.recharge;
   }
+
+  getType(): string {
+    return '';
+  }
 }

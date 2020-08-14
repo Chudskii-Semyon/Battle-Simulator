@@ -20,4 +20,8 @@ export class Soldier extends BaseUnit {
   accept(visitor: Visitor): any {
     return visitor.visitSoldier(this);
   }
+
+  getType(): string {
+    return this.constructor.name;
+  }
 }

@@ -20,4 +20,8 @@ export class Operator extends BaseUnit {
   accept(visitor: Visitor): any {
     return visitor.visitOperator(this);
   }
+
+  getType(): string {
+    return this.constructor.name;
+  }
 }

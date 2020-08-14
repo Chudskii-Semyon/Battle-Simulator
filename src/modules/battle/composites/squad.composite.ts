@@ -42,4 +42,8 @@ export class Squad implements Unit {
   getRechargeTime(): number {
     return 0;
   }
+
+  getType(): string {
+    return this.constructor.name;
+  }
 }

@@ -7,6 +7,8 @@ export interface Unit {
 
   isComposite(): boolean;
 
+  getType(): string;
+
   accept(visitor: Visitor);
 
   filterInActiveUnits(): void;
