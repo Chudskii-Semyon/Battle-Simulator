@@ -6,12 +6,12 @@ import { AccessControlModule } from '../../access-control/access-control.module'
 import { ArmiesController } from '../armies.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CreateArmyDto } from '../DTOs/create-army.dto';
-import { mockArmy } from '../../../mocks/entities/army.mock';
-import { mockUser } from '../../../mocks/entities/user.mock';
+import { mockArmy, mockUser } from '../../../mocks/entities';
 import { AccessControlService } from '../../access-control/access-control.service';
 import { PolicyDto } from '../../access-control/DTOs/policy.dto';
 import { ResourceNameEnum } from '../../../enums/resource-name.enum';
 import { ArmyNotFoundError } from '../../../errors/army-not-found.error';
+import { mockArmyRepository } from '../../../mocks/repositories';
 
 describe('ArmiesService', () => {
   let service: ArmiesService;
@@ -19,19 +19,10 @@ describe('ArmiesService', () => {
 
   let addAccessRuleToCreatedUnitSpy: jest.SpyInstance<Promise<boolean>>;
 
-  const mockArmyRepository = {
-    save: jest.fn().mockReturnValue(mockArmy),
-    create: jest.fn().mockReturnValue(mockArmy),
-    findOneOrFail: jest.fn().mockReturnValue(mockArmy),
-    delete: jest.fn(),
-  };
-
   beforeEach(() => {
     addAccessRuleToCreatedUnitSpy = jest
       .spyOn(accessControlService, 'addAccessRuleToCreatedUnit')
       .mockResolvedValue(true);
-
-    jest.clearAllMocks();
   });
 
   beforeAll(async () => {
@@ -88,7 +79,7 @@ describe('ArmiesService', () => {
 
     it('should throw error if army is not found', async function() {
       try {
-        mockArmyRepository.findOneOrFail.mockImplementation(() => {
+        mockArmyRepository.findOneOrFail.mockImplementationOnce(() => {
           throw new ArmyNotFoundError(mockArmy.id);
         });
 
@@ -126,7 +117,7 @@ describe('ArmiesService', () => {
     });
     it('should throw error if error occurred', async function() {
       try {
-        mockArmyRepository.delete.mockImplementation(() => {
+        mockArmyRepository.delete.mockImplementationOnce(() => {
           throw new Error();
         });
         await service.deleteArmy(mockArmy.id, mockUser);
