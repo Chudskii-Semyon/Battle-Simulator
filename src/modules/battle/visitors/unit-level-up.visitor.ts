@@ -6,6 +6,16 @@ import { Operator } from '../composites/leafs/operator.leaf';
 import { Vehicle } from '../composites/vehicle.composite';
 
 export class UnitLevelUpVisitor implements Visitor {
+  get rechargeThreshold(): number {
+    return this._rechargeThreshold;
+  }
+  get subtractRechargeOnLevelUp(): number {
+    return this._subtractRechargeOnLevelUp;
+  }
+  private _subtractRechargeOnLevelUp = 25;
+
+  private _rechargeThreshold = 250;
+
   public levelUp(...units: Unit[]): void {
     units.forEach(unit => unit.accept(this));
   }
@@ -28,6 +38,8 @@ export class UnitLevelUpVisitor implements Visitor {
     vehicle.operators.forEach(operator => {
       operator.accept(this);
     });
+
+    vehicle.recharge = this.updateRecharge(vehicle.recharge);
   }
 
   private incrementExperience(experience: number): number {
@@ -39,8 +51,8 @@ export class UnitLevelUpVisitor implements Visitor {
   }
 
   private updateRecharge(recharge: number): number {
-    if (recharge >= 225) {
-      return recharge - 25;
+    if (recharge > this.rechargeThreshold) {
+      return recharge - this.subtractRechargeOnLevelUp;
     }
 
     return recharge;

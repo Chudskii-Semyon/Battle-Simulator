@@ -30,7 +30,7 @@ export class InflictBaseDamageVisitor implements Visitor {
     if (soldier.healthPoints < 0) {
       soldier.healthPoints = 0;
     }
-    console.log(`Soldier got ${this.damage}. Left ${soldier.healthPoints} HP.`);
+    console.log(`Soldier got ${this.damage} damage. Left ${soldier.healthPoints} HP.`);
   }
 
   public visitOperator(operator: Operator): void {
@@ -39,7 +39,9 @@ export class InflictBaseDamageVisitor implements Visitor {
     if (operator.healthPoints < 0) {
       operator.healthPoints = 0;
     }
-    console.log(`Operator got ${this.damage}. Left ${operator.healthPoints} HP.`);
+    console.log(
+      `Operator ( ${operator.id} ) got ${this.damage} damage. Left ${operator.healthPoints} HP.`,
+    );
   }
 
   public visitSquad(squad: Squad): void {
@@ -53,15 +55,19 @@ export class InflictBaseDamageVisitor implements Visitor {
 
     operators.forEach((operator, index) => {
       if (index === randomOperatorIndex) {
-        this.damage = (damage / 100) * 20;
+        this.damage = damage * 0.2;
       } else {
-        this.damage = (damage / 100) * 10;
+        this.damage = damage * 0.1;
       }
       operator.accept(this);
     });
 
-    vehicle.healthPoints = vehicle.healthPoints - (damage / 100) * 60;
-    console.log(`Vehicle got ${(damage / 100) * 60}. Left ${vehicle.healthPoints} HP.`);
+    vehicle.healthPoints = vehicle.healthPoints - damage * 0.6;
+
+    if (vehicle.healthPoints <= 0) {
+      vehicle.healthPoints = 0;
+    }
+    console.log(`Vehicle got ${(damage / 100) * 60} damage. Left ${vehicle.healthPoints} HP.`);
     this.damage = damage;
   }
 }

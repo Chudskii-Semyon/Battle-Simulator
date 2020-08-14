@@ -4,7 +4,6 @@ import { Unit } from '../composites/interfaces/unit.interface';
 import { Soldier } from '../composites/leafs/soldier.leaf';
 import { Operator } from '../composites/leafs/operator.leaf';
 import { Vehicle } from '../composites/vehicle.composite';
-import { randomRange } from '../../../utils';
 import { sum, sumBy } from 'lodash';
 
 export class CalculateBaseAttackDamageVisitor implements Visitor {
@@ -15,9 +14,9 @@ export class CalculateBaseAttackDamageVisitor implements Visitor {
   }
 
   public visitSoldier(soldier: Soldier): number {
-    const { experience, healthPoints } = soldier;
+    const { experience } = soldier;
 
-    return (0.5 * ((1 + healthPoints / 100) * randomRange(50 + experience, 100))) / 100;
+    return 0.05 + experience / 100;
   }
 
   public visitOperator(operator: Operator): number {

@@ -8,7 +8,6 @@ import { Vehicle } from '../composites/vehicle.composite';
 export class FilterInActiveUnitsVisitor implements Visitor {
   public filterInActiveUnits(...units: Unit[]): void {
     units.filter(unit => {
-      // console.log('unit =>', unit);
       unit.accept(this);
       return unit.getTotalHealthPoints() > 0;
     });
@@ -34,10 +33,15 @@ export class FilterInActiveUnitsVisitor implements Visitor {
   }
 
   public visitVehicle(vehicle: Vehicle): void {
+    if (vehicle.healthPoints <= 0) {
+      vehicle.operators = [];
+      return;
+    }
+
     vehicle.operators = vehicle.operators.filter(operator => {
       operator.accept(this);
 
-      return operator.getTotalHealthPoints() <= 0;
+      return operator.getTotalHealthPoints() > 0;
     });
 
     if (!vehicle.operators.length) {
