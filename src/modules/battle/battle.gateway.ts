@@ -8,9 +8,6 @@ import {
 import { Server } from 'socket.io';
 import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-// import { Vehicle } from '../../entities/vehicle.entity';
-// import { Soldier } from '../../entities/soldier.entity';
-// import { Operator } from '../../entities/operator.entity';
 import { ArmyRepository } from '../armies/repositories/army.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Army } from '../../entities/army.entity';
@@ -19,8 +16,7 @@ import { BattleService } from './battle.service';
 import { User } from '../../entities/user.entity';
 import { UserRepository } from '../users/repositories/user.repository';
 import { BATTLE_START } from './constants/socket-events.constant';
-
-// import {Squad} from './composite'
+import { BattleSimulationProcessor } from './processors/battle-simulation.processor';
 
 @WebSocketGateway()
 export class BattleGateway {
@@ -37,11 +33,13 @@ export class BattleGateway {
     @InjectRepository(User)
     private readonly userRepository: UserRepository,
     private readonly battleService: BattleService,
+    private readonly battleSimulatorProcessor: BattleSimulationProcessor,
     private socketService: BattleService,
   ) {}
 
   afterInit(server: Server) {
     this.battleService.socket = server;
+    this.battleSimulatorProcessor.socket = server;
   }
 
   @SubscribeMessage('events')
@@ -51,9 +49,10 @@ export class BattleGateway {
 
   @SubscribeMessage(BATTLE_START)
   async battleStart(@MessageBody() data: number): Promise<void> {
-    const user = await this.userRepository.findOneOrFail(3);
+    const user = await this.userRepository.findOneOrFail(1);
 
-    await this.battleService.battleStart(21, user);
+    await this.battleService.battleStart(5, user);
+    // await this.battleService.battleStart(21, user);
     // const armies = await this.armiesRepository.find({
     //   where: { id: In([19, 21]) },
     //   relations: ['squads', 'squads.soldiers', 'squads.vehicles', 'squads.vehicles.operators'],
