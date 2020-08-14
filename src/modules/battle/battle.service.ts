@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '../../logger/logger.service';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Army } from '../../entities/army.entity';
 import { ArmyRepository } from '../armies/repositories/army.repository';
 import { User } from '../../entities/user.entity';
@@ -19,7 +18,13 @@ import { CalculateRechargeTimeVisitor } from './visitors/calculate-recharge-time
 import { Vehicle } from './composites/vehicle.composite';
 import { Operator } from './composites/leafs/operator.leaf';
 import { Soldier } from './composites/leafs/soldier.leaf';
-import { BATTLE_END, SQUAD_ATTACK } from './constants/socket-events.constant';
+import { BATTLE_END } from './constants/socket-events.constant';
+import { InjectQueue } from '@nestjs/bull';
+import { BATTLE_SIMULATION_QUEUE_TOKEN } from './constants/queues.constant';
+import { Queue } from 'bull';
+import { ATTACK_JOB, BattleSimulationProcessor } from './processors/battle-simulation.processor';
+import { Squads } from './interfaces/squads.interface';
+import { AttackJob } from './jobs/squad-attack.job';
 
 @Injectable()
 export class BattleService {
@@ -30,30 +35,39 @@ export class BattleService {
 
   constructor(
     private readonly logger: LoggerService,
-    @InjectRepository(Army)
+    @InjectQueue(BATTLE_SIMULATION_QUEUE_TOKEN)
+    private readonly battleSimulationQueue: Queue,
+    private readonly battleSimulatorProcessor: BattleSimulationProcessor,
     private readonly armyRepository: ArmyRepository,
   ) {}
 
-  public async battleStart(enemyArmyId: number, user: User): Promise<void> {
+  public async battleStart(enemyArmyId: number, user?: User): Promise<void> {
     const armies = await this.armyRepository.find({
       where: [{ id: enemyArmyId }, { userId: user.id }],
       relations: ['squads', 'squads.soldiers', 'squads.vehicles', 'squads.vehicles.operators'],
     });
 
+    const squads: Squads = {
+      ally: [],
+      enemy: [],
+    };
+
     armies.forEach(army => {
       if (army.userId === user.id) {
-        this.allySquads = this.buildComposedSquads(army);
+        squads['ally'] = [...this.buildComposedSquads(army)];
       } else {
-        this.enemySquads = this.buildComposedSquads(army);
+        squads['enemy'] = [...this.buildComposedSquads(army)];
       }
     });
 
-    this.allySquads.forEach(squad => {
-      this.squadAttack(squad, this.enemySquads);
-    });
+    this.battleSimulatorProcessor.setSquads(squads);
 
-    this.enemySquads.forEach(squad => {
-      this.squadAttack(squad, this.allySquads);
+    Object.keys(squads).forEach(squadKey => {
+      squads[squadKey].forEach(squad => {
+        const attackJob: AttackJob = { attackerId: squad.id, attackerSide: squadKey };
+
+        this.battleSimulationQueue.add(ATTACK_JOB, attackJob, { delay: 2000 });
+      });
     });
   }
 
@@ -100,7 +114,7 @@ export class BattleService {
 
   private buildComposedSquads(army: Army): Squad[] {
     return army.squads.map(squad => {
-      const squadUnit = new Squad(squad.strategy);
+      const squadUnit = new Squad(squad.id, squad.strategy);
 
       squad.vehicles.forEach(vehicle => {
         const createUnitDto = plainToClass(CreateUnitDto, vehicle);
