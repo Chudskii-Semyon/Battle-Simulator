@@ -6,8 +6,19 @@ import { Unit } from './interfaces/unit.interface';
 export class Squad implements Unit {
   public units: Unit[] = [];
 
-  constructor(strategy: StrategyEnum) {
+  constructor(id: number, strategy: StrategyEnum) {
     this._strategy = strategy;
+    this._id = id;
+  }
+
+  private _id: number;
+
+  get id(): number {
+    return this._id;
+  }
+
+  set id(value: number) {
+    this._id = value;
   }
 
   private _strategy: StrategyEnum;
