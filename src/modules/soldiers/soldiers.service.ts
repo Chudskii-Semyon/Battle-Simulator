@@ -11,6 +11,7 @@ import { CreatePolicyDto } from '../access-control/DTOs/create-policy.dto';
 import { SquadNotFoundError } from '../../errors/squad-not-found.error';
 import { ConfigRepository } from '../configs/repositories/config.repository';
 import { ConfigsService } from '../configs/configs.service';
+import { SoldierNotFoundError } from '../../errors/soldier-not-found.error';
 
 @Injectable()
 export class SoldiersService {
@@ -36,7 +37,7 @@ export class SoldiersService {
         error.stack,
         this.loggerContext,
       );
-      throw new Error('soldier not found');
+      throw new SoldierNotFoundError(soldierId);
     }
   }
 
