@@ -4,10 +4,19 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigRepository } from './repositories/config.repository';
 import { SquadRepository } from '../squads/repositories/squad.repository';
 import { LoggerService } from '../../logger/logger.service';
+import { SoldierRepository } from '../soldiers/repositories/soldier.repository';
+import { VehicleRepository } from '../vehicles/repositories/vehicle.repository';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ConfigRepository, SquadRepository])],
+  imports: [
+    TypeOrmModule.forFeature([
+      ConfigRepository,
+      SquadRepository,
+      SoldierRepository,
+      VehicleRepository,
+    ]),
+  ],
   providers: [ConfigsService, LoggerService],
-  exports: [ConfigsService],
+  exports: [ConfigsService, TypeOrmModule],
 })
 export class ConfigsModule {}

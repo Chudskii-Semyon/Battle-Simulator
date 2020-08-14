@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '../../logger/logger.service';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Soldier } from '../../entities/soldier.entity';
 import { SoldierRepository } from './repositories/soldier.repository';
 import { AccessControlService } from '../access-control/access-control.service';
@@ -10,7 +9,6 @@ import { PolicyDto } from '../access-control/DTOs/policy.dto';
 import { ResourceNameEnum } from '../../enums/resource-name.enum';
 import { CreatePolicyDto } from '../access-control/DTOs/create-policy.dto';
 import { SquadNotFoundError } from '../../errors/squad-not-found.error';
-import { Config } from '../../entities/config.entity';
 import { ConfigRepository } from '../configs/repositories/config.repository';
 import { ConfigsService } from '../configs/configs.service';
 
@@ -19,9 +17,7 @@ export class SoldiersService {
   private readonly loggerContext = this.constructor.name;
 
   constructor(
-    @InjectRepository(Config)
     private readonly configRepository: ConfigRepository,
-    @InjectRepository(Soldier)
     private readonly soldierRepository: SoldierRepository,
     private readonly configService: ConfigsService,
     private readonly accessControlService: AccessControlService,
