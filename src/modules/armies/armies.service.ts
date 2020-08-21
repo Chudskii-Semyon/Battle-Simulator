@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '../../logger/logger.service';
-import { InjectRepository } from '@nestjs/typeorm';
 import { ArmyRepository } from './repositories/army.repository';
 import { AccessControlService } from '../access-control/access-control.service';
 import { CreateArmyDto } from './DTOs/create-army.dto';
@@ -20,6 +19,10 @@ export class ArmiesService {
     private readonly armyRepository: ArmyRepository,
     private readonly accessControlService: AccessControlService,
   ) {}
+
+  public async getArmies(user: User): Promise<Army[]> {
+    return await this.armyRepository.find({ userId: user.id });
+  }
 
   public async getArmy(armyId: number): Promise<Army> {
     try {
@@ -93,12 +96,10 @@ export class ArmiesService {
     return true;
   }
 
-  private buildPolicy(ownerId: number, resourceId: number): PolicyDto {
-    return {
-      resourceOwnerName: ResourceNameEnum.USERS,
-      resourceOwnerId: ownerId,
-      resourceName: ResourceNameEnum.ARMIES,
-      resourceId,
-    };
-  }
+  private buildPolicy = (ownerId: number, resourceId: number): PolicyDto => ({
+    resourceOwnerName: ResourceNameEnum.USER,
+    resourceOwnerId: ownerId,
+    resourceName: ResourceNameEnum.ARMY,
+    resourceId,
+  });
 }

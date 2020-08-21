@@ -4,6 +4,7 @@ import { mockVehicleRepository } from './vehicle-repository.mock';
 import { mockOperatorRepository } from './operator-repository.mock';
 import { mockConfigRepository } from './config-repository.mock';
 import { mockArmyRepository } from './army-repository.mock';
+import { mockUserRepository } from './user-repository.mock';
 
 export {
   mockArmyRepository,
@@ -12,4 +13,5 @@ export {
   mockVehicleRepository,
   mockOperatorRepository,
   mockConfigRepository,
+  mockUserRepository,
 };

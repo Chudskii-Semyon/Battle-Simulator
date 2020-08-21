@@ -1,14 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  Param,
-  Get,
-  Put,
-  Delete,
-  HttpCode,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
 import { ArmiesService } from './armies.service';
 import { Army } from '../../entities/army.entity';
 import { CreateArmyDto } from './DTOs/create-army.dto';
@@ -28,8 +18,20 @@ export class ArmiesController {
     private readonly logger: LoggerService,
   ) {}
 
-  @Get(':id')
-  public async getArmy(@Param('id') armyId: number): Promise<Army> {
+  @Get()
+  public async getArmies(@WithUser() user: User): Promise<Army[]> {
+    this.logger.debug(
+      {
+        message: `Proceed GetArmies`,
+        user,
+      },
+      this.loggerContext,
+    );
+    return this.armiesService.getArmies(user);
+  }
+
+  @Get(':armyId')
+  public async getArmy(@Param('armyId') armyId: number): Promise<Army> {
     this.logger.debug(
       {
         message: `Proceed GetArmy`,
@@ -56,9 +58,12 @@ export class ArmiesController {
     return this.armiesService.createArmy(createArmyDto, user);
   }
 
-  @Delete(':id')
+  @Delete(':armyId')
   @HttpCode(204)
-  public async deleteArmy(@Param('id') armyId: number, @WithUser() user: User): Promise<boolean> {
+  public async deleteArmy(
+    @Param('armyId') armyId: number,
+    @WithUser() user: User,
+  ): Promise<boolean> {
     this.logger.debug(
       {
         message: `Proceed DeleteArmy`,

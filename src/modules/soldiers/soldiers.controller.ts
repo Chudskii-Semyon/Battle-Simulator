@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Param, Get, Delete, HttpCode } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
 import { LoggerService } from '../../logger/logger.service';
 import { SoldiersService } from './soldiers.service';
 import { CreateSoldierDto } from './DTOs/createSoldier.dto';
@@ -15,11 +15,26 @@ export class SoldiersController {
 
   constructor(
     private readonly logger: LoggerService,
-    private readonly soldierService: SoldiersService,
+    private readonly soldiersService: SoldiersService,
   ) {}
 
-  @Get(':id')
-  public async getSoldier(@Param('id') soldierId: number): Promise<Soldier> {
+  @Get()
+  public async getSoldiers(
+    @Body('squadId') squadId: number,
+    @WithUser() user: User,
+  ): Promise<Soldier[]> {
+    this.logger.debug(
+      {
+        message: `Proceed GetSoldiers`,
+        user,
+      },
+      this.loggerContext,
+    );
+    return this.soldiersService.getSoldiers(squadId);
+  }
+
+  @Get(':soldierId')
+  public async getSoldier(@Param('soldierId') soldierId: number): Promise<Soldier> {
     this.logger.debug(
       {
         message: `Proceed GetSoldier`,
@@ -28,29 +43,25 @@ export class SoldiersController {
       this.loggerContext,
     );
 
-    return this.soldierService.getSoldier(soldierId);
+    return this.soldiersService.getSoldier(soldierId);
   }
 
   @Post()
-  public async createSoldier(
-    @Body() createSoldierDto: CreateSoldierDto,
-    @WithUser() user: User,
-  ): Promise<Soldier> {
+  public async createSoldier(@Body() createSoldierDto: CreateSoldierDto): Promise<Soldier> {
     this.logger.debug(
       {
         message: `Proceed CreateSoldier`,
         createSoldierDto,
-        user,
       },
       this.loggerContext,
     );
 
-    return this.soldierService.createSoldier(createSoldierDto, user);
+    return this.soldiersService.createSoldier(createSoldierDto);
   }
 
-  @Delete(':id')
+  @Delete(':soldierId')
   @HttpCode(204)
-  public async deleteSoldier(@Param() soldierId: number): Promise<void> {
+  public async deleteSoldier(@Param('soldierId') soldierId: number): Promise<void> {
     this.logger.debug(
       {
         message: `Proceed DeleteSoldier`,
@@ -59,6 +70,6 @@ export class SoldiersController {
       this.loggerContext,
     );
 
-    await this.soldierService.deleteSoldier(soldierId);
+    await this.soldiersService.deleteSoldier(soldierId);
   }
 }

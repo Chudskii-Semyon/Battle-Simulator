@@ -1,6 +1,6 @@
-import { Operator } from '../../entities/operator.entity';
 import { mockVehicle } from './vehicle.mock';
 import { mockConfig } from './config.mock';
+import { Operator } from '../../entities/operator.entity';
 
 export const mockOperator = {
   id: 1,

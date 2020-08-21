@@ -2,9 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { CreateSquadDto } from './DTOs/create-squad.dto';
 import { LoggerService } from '../../logger/logger.service';
 import { SquadRepository } from './repositories/squad.repository';
-import { Squad } from '../../entities/squad';
+import { Squad } from '../../entities/squad.entity';
 import { AccessControlService } from '../access-control/access-control.service';
-import { User } from '../../entities/user.entity';
 import { PolicyDto } from '../access-control/DTOs/policy.dto';
 import { ResourceNameEnum } from '../../enums/resource-name.enum';
 import { CouldNotCreateSquadError } from '../../errors/could-not-create-squad.error';
@@ -22,6 +21,10 @@ export class SquadsService {
     private readonly accessControlService: AccessControlService,
   ) {}
 
+  public async getSquads(armyId: number): Promise<Squad[]> {
+    return await this.squadRepository.find({ armyId });
+  }
+
   public async getSquad(squadId: number): Promise<Squad> {
     try {
       return this.squadRepository.findOneOrFail(squadId);
@@ -38,17 +41,8 @@ export class SquadsService {
     }
   }
 
-  public async createSquad(createSquadDto: CreateSquadDto, user: User): Promise<Squad> {
+  public async createSquad(createSquadDto: CreateSquadDto): Promise<Squad> {
     const { armyId } = createSquadDto;
-
-    const policy: PolicyDto = {
-      resourceOwnerName: ResourceNameEnum.USERS,
-      resourceOwnerId: user.id,
-      resourceName: ResourceNameEnum.ARMIES,
-      resourceId: armyId,
-    };
-
-    await this.accessControlService.checkAccessOrFail(policy);
 
     await this.configService.validateNumberOfSquadsPerArmyOrFail(armyId);
 
@@ -66,7 +60,6 @@ export class SquadsService {
         {
           message: `Could not create squad. Error: ${error.message}`,
           createSquadDto,
-          user,
         },
         error.stack,
         this.loggerContext,
@@ -118,9 +111,9 @@ export class SquadsService {
 
   private buildPolicy(ownerId: number, resourceId: number): PolicyDto {
     return {
-      resourceOwnerName: ResourceNameEnum.ARMIES,
+      resourceOwnerName: ResourceNameEnum.ARMY,
       resourceOwnerId: ownerId,
-      resourceName: ResourceNameEnum.SQUADS,
+      resourceName: ResourceNameEnum.SQUAD,
       resourceId,
     };
   }

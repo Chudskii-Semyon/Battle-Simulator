@@ -16,7 +16,7 @@ import { SquadRepository } from '../../squads/repositories/squad.repository';
 import { ConfigRepository } from '../../configs/repositories/config.repository';
 import { VehicleRepository } from '../../vehicles/repositories/vehicle.repository';
 import { CreateSoldierDto } from '../DTOs/createSoldier.dto';
-import { mockSoldier, mockUser } from '../../../mocks/entities';
+import { mockSoldier } from '../../../mocks/entities';
 import { AccessControlService } from '../../access-control/access-control.service';
 import { ConfigsService } from '../../configs/configs.service';
 import { PolicyDto } from '../../access-control/DTOs/policy.dto';
@@ -30,8 +30,6 @@ describe('SoldiersService', () => {
 
   let addAccessRuleToCreatedUnitSpy: jest.SpyInstance<Promise<boolean>>;
   let removeAccessRuleOnDeletedUnitSpy: jest.SpyInstance<Promise<boolean>>;
-  let checkAccessOrFailSpy: jest.SpyInstance<Promise<boolean>>;
-  let validateNumberOfSquadsPerArmyOrFailSpy: jest.SpyInstance<Promise<boolean>>;
   let validateNumberOfUnitsPerSquadOrFail: jest.SpyInstance<Promise<boolean>>;
 
   beforeAll(async () => {
@@ -59,17 +57,10 @@ describe('SoldiersService', () => {
     addAccessRuleToCreatedUnitSpy = jest
       .spyOn(accessControlService, 'addAccessRuleToCreatedUnit')
       .mockResolvedValue(true);
-    checkAccessOrFailSpy = jest
-      .spyOn(accessControlService, 'checkAccessOrFail')
-      .mockResolvedValue(false);
     removeAccessRuleOnDeletedUnitSpy = jest.spyOn(
       accessControlService,
       'removeAccessRuleOnDeletedUnit',
     );
-
-    validateNumberOfSquadsPerArmyOrFailSpy = jest
-      .spyOn(configsService, 'validateNumberOfSquadsPerArmyOrFail')
-      .mockResolvedValue(true);
 
     validateNumberOfUnitsPerSquadOrFail = jest
       .spyOn(configsService, 'validateNumberOfUnitsPerSquadOrFail')
@@ -88,38 +79,25 @@ describe('SoldiersService', () => {
       };
     });
 
-    it('should check access to this resource', async function() {
-      await service.createSoldier(createSoldierDto, mockUser);
-
-      const policy: PolicyDto = {
-        resourceOwnerName: ResourceNameEnum.USERS,
-        resourceOwnerId: mockUser.id,
-        resourceName: ResourceNameEnum.SQUADS,
-        resourceId: createSoldierDto.squadId,
-      };
-
-      expect(checkAccessOrFailSpy).toBeCalledWith(policy);
-    });
-
     it('should validate number of soldiers per squad', async function() {
-      await service.createSoldier(createSoldierDto, mockUser);
+      await service.createSoldier(createSoldierDto);
 
       expect(validateNumberOfUnitsPerSquadOrFail).toBeCalledWith(createSoldierDto.squadId);
     });
 
     it('should create soldier', async function() {
-      const result = await service.createSoldier(createSoldierDto, mockUser);
+      const result = await service.createSoldier(createSoldierDto);
 
       expect(result).toBe(mockSoldier);
     });
 
     it('should create new access policy', async function() {
-      await service.createSoldier(createSoldierDto, mockUser);
+      await service.createSoldier(createSoldierDto);
 
       const policy: PolicyDto = {
-        resourceOwnerName: ResourceNameEnum.SQUADS,
+        resourceOwnerName: ResourceNameEnum.SQUAD,
         resourceOwnerId: createSoldierDto.squadId,
-        resourceName: ResourceNameEnum.SOLDIERS,
+        resourceName: ResourceNameEnum.SOLDIER,
         resourceId: mockSoldier.id,
       };
 
@@ -143,6 +121,41 @@ describe('SoldiersService', () => {
         } catch (error) {
           expect(error).toStrictEqual(new SoldierNotFoundError(mockSoldier.id));
         }
+      });
+    });
+
+    describe('deleteSoldier', function() {
+      const soldierId = mockSoldier.id;
+
+      it('should delete soldier', async function() {
+        await service.deleteSoldier(soldierId);
+
+        expect(mockSoldierRepository.delete).toBeCalledWith(soldierId);
+      });
+
+      it('should throw soldier not found', async function() {
+        mockSoldierRepository.findOneOrFail.mockImplementationOnce(() => {
+          throw new Error();
+        });
+
+        try {
+          await service.deleteSoldier(soldierId);
+        } catch (error) {
+          expect(error).toStrictEqual(new SoldierNotFoundError(soldierId));
+        }
+      });
+
+      it('should remove access policy', async function() {
+        const policy: PolicyDto = {
+          resourceOwnerName: ResourceNameEnum.SQUAD,
+          resourceOwnerId: mockSoldier.squadId,
+          resourceName: ResourceNameEnum.SOLDIER,
+          resourceId: soldierId,
+        };
+
+        await service.deleteSoldier(soldierId);
+
+        expect(removeAccessRuleOnDeletedUnitSpy).toBeCalledWith(policy);
       });
     });
   });

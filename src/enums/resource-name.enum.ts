@@ -1,8 +1,8 @@
-export const enum ResourceNameEnum {
-  USERS = 'users',
-  ARMIES = 'armies',
-  SQUADS = 'squads',
-  VEHICLES = 'vehicles',
-  SOLDIERS = 'soldiers',
-  OPERATORS = 'operators',
+export enum ResourceNameEnum {
+  USER = 'user',
+  ARMY = 'army',
+  SQUAD = 'squad',
+  VEHICLE = 'vehicle',
+  SOLDIER = 'soldier',
+  OPERATOR = 'operator',
 }

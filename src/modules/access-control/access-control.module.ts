@@ -1,36 +1,29 @@
 import { Module } from '@nestjs/common';
 import { ENFORCER_TOKEN } from './constants';
 import { Enforcer, newEnforcer } from 'casbin';
-import { join } from 'path';
 import { AccessControlService } from './access-control.service';
 import TypeORMAdapter from 'typeorm-adapter';
 import { LoggerService } from '../../logger/logger.service';
+import { CONFIG_TOKEN } from '../../config/constants/config.constant';
+import { ConfigModule } from '../../config/config.module';
+import { IConfigSchema } from '../../config/interfaces/schema.interface';
 
 @Module({
+  imports: [ConfigModule],
   providers: [
     {
       provide: ENFORCER_TOKEN,
-      useFactory: async (): Promise<Enforcer> => {
-        // TODO move to config
-        // TODO update implementation to use dynamic adapter
-        const model = join(process.cwd(), '/src/casbin-conf/model.conf');
-        const adapter = await TypeORMAdapter.newAdapter({
-          type: 'postgres',
-          host: 'localhost',
-          port: 5432,
-          username: 'postgres',
-          password: '',
-          database: 'battle_simulator_database',
-        });
+      useFactory: async (config: IConfigSchema): Promise<Enforcer> => {
+        const model = config.casbinEnforcer.pathToModel;
+        const adapter = await TypeORMAdapter.newAdapter(config.typeorm);
 
         return await newEnforcer(model, adapter);
       },
+      inject: [CONFIG_TOKEN],
     },
-    // ENFORCER_TOKEN,
     AccessControlService,
     LoggerService,
   ],
   exports: [AccessControlService],
-  // exports: [AccessControlService, ENFORCER_TOKEN],
 })
 export class AccessControlModule {}

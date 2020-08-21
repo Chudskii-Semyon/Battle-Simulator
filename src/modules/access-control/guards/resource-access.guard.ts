@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { User } from '../../../entities/user.entity';
 import { ForbiddenResourceError } from '../../../errors/forbidden-resource.error';
 import { LoggerService } from '../../../logger/logger.service';
@@ -6,7 +6,11 @@ import { AccessControlService } from '../access-control.service';
 import { ResourceNameEnum } from '../../../enums/resource-name.enum';
 import { Reflector } from '@nestjs/core';
 
-// TODO update resource access guard
+interface Resource {
+  resourceName: ResourceNameEnum;
+  idOfResource: number;
+}
+
 @Injectable()
 export class ResourceAccessGuard implements CanActivate {
   private readonly loggerContext = this.constructor.name;
@@ -18,43 +22,22 @@ export class ResourceAccessGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const controller = this.reflector.get<string>('PATH_METADATA', context.getClass());
-
-    this.logger.debug(
-      {
-        message: `METADATA`,
-        metadata: context.getClass(),
-        controller,
-      },
-      this.loggerContext,
-    );
     const request = context.switchToHttp().getRequest();
 
-    const acceptedMethods = ['GET', 'PUT', 'DELETE'];
-    const { method, url, params } = request;
+    const { method, url } = request;
 
-    if (!acceptedMethods.includes(method)) {
+    const isArmiesRoute = url.endsWith('armies');
+
+    if (isArmiesRoute) {
       return true;
     }
 
-    if (!params.id) {
-      return true;
-    }
-
-    const parsedUrl: string = url.split('/');
-    const route: string = parsedUrl[parsedUrl.length - 2];
+    const { resourceName, idOfResource } = this.getResourceFromRequest(request);
 
     const user: User = request.user;
 
-    // @ts-ignore
-    // const isValidResourceName = ResourceNameEnum[route.toUpperCase()];
-
-    // if (!isValidResourceName) {
-    //   throw new Error('resource name');
-    // }
-
-    const sub = `role:${ResourceNameEnum.USERS}/${user.id}`;
-    const obj = `resource:${parsedUrl[1]}/${parsedUrl[2]}`;
+    const sub = `role:${ResourceNameEnum.USER}/${user.id}`;
+    const obj = `resource:${resourceName}/${idOfResource}`;
     const action = method;
 
     let hasAccess: boolean;
@@ -66,12 +49,13 @@ export class ResourceAccessGuard implements CanActivate {
       this.logger.error(
         {
           message: `user do not have access to this source`,
+          resourceName,
+          idOfResource,
           hasAccess,
           sub,
           obj,
           action,
           user,
-          url,
         },
         new Error().stack,
         this.loggerContext,
@@ -80,5 +64,31 @@ export class ResourceAccessGuard implements CanActivate {
     }
 
     return true;
+  }
+
+  private getResourceFromRequest({ body, params }: any): Resource {
+    const resources = Object.values(ResourceNameEnum);
+    let name = Object.keys(body).find(key => key.includes('Id'));
+
+    if (name) {
+      return {
+        resourceName: resources.find(value => value.includes(name.split('Id', 1)[0])),
+        idOfResource: body[name],
+      };
+    }
+
+    name = Object.keys(params).find(key => key.includes('Id'));
+
+    if (name) {
+      return {
+        resourceName: resources.find(value => value.includes(name.split('Id', 1)[0])),
+        idOfResource: params[name],
+      };
+    }
+
+    return {
+      resourceName: resources.find(value => value.includes(name.split('Id', 1)[0])),
+      idOfResource: body[name],
+    };
   }
 }

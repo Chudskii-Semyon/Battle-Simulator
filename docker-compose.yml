@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  main:
+    container_name: main
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules/bcrypt
+    ports:
+      - ${PORT}:${PORT}
+      - 9229:9229
+#    command: npm run start:dev
+    command: yarn start:dev
+    env_file:
+      - .env
+    networks:
+      - webnet
+    depends_on:
+      - postgres
+  postgres:
+    container_name: postgres
+    image: postgres:12
+    networks:
+      - webnet
+    environment:
+      POSTGRES_PASSWORD: ${TYPEORM_PASSWORD}
+      POSTGRES_USER: ${TYPEORM_USERNAME}
+      POSTGRES_DB: ${TYPEORM_DATABASE}
+      PG_DATA: /var/lib/postgresql/data
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+networks:
+  webnet:
+volumes:
+  pgdata:

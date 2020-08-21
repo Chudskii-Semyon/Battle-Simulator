@@ -1,4 +1,4 @@
-import { Squad } from '../../../entities/squad';
+import { Squad } from '../../../entities/squad.entity';
 
 export class SquadAttackDto {
   public attackSquad: Squad;

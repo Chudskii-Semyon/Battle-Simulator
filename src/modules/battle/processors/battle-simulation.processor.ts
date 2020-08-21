@@ -15,9 +15,7 @@ import { BATTLE_END } from '../constants/socket-events.constant';
 import { GetHealthPointsVisitor } from '../visitors/get-health-points.visitior';
 import { FilterInActiveUnitsVisitor } from '../visitors/filter-inactive-units.visitor';
 import { LoggerService } from '../../../logger/logger.service';
-
-export const ATTACK_JOB = 'ATTACK_JOB';
-export const AFTER_ATTACK_JOB = 'AFTER_ATTACK_JOB';
+import { ATTACK_JOB } from '../constants/jobs.constant';
 
 @Processor(BATTLE_SIMULATION_QUEUE_TOKEN)
 export class BattleSimulationProcessor {
@@ -26,16 +24,16 @@ export class BattleSimulationProcessor {
   private squads: Squads;
 
   constructor(
-    private readonly logger: LoggerService,
     @InjectQueue(BATTLE_SIMULATION_QUEUE_TOKEN)
     private readonly battleSimulationQueue: Queue,
+    private readonly logger: LoggerService,
   ) {}
 
   @Process(ATTACK_JOB)
   public async attack(job: Job<AttackJob>): Promise<void> {
     const { attackerId, attackerSide } = job.data;
 
-    const defendersSide = attackerSide === 'ally' ? 'enemy' : 'ally';
+    const defenderSide = attackerSide === 'ally' ? 'enemy' : 'ally';
 
     const attacker = this.squads[attackerSide].find(squad => squad.id === attackerId);
 
@@ -44,8 +42,8 @@ export class BattleSimulationProcessor {
       return;
     }
 
-    const defenderIndex = this.selectSquadToAttack(attacker.strategy, defendersSide);
-    const defenders = this.squads[defendersSide];
+    const defenderIndex = this.selectSquadToAttack(attacker.strategy, defenderSide);
+    const defenders = this.squads[defenderSide];
     const defender = defenders[defenderIndex];
 
     const calculateAttackSuccessVisitor = new CalculateBaseAttackSuccessVisitor();
@@ -54,8 +52,8 @@ export class BattleSimulationProcessor {
 
     this.logger.debug(
       {
-        message: `Calculated attack success`,
-        side: attackerSide,
+        message: `Calculated attack success rates`,
+        attackerSide,
         attackerSuccess,
         defenderSuccess,
       },
@@ -83,8 +81,8 @@ export class BattleSimulationProcessor {
     this.filterSquads();
 
     if (this.checkWinner()) {
-      this.socket.emit(BATTLE_END);
       await this.battleSimulationQueue.empty();
+      this.socket.emit(BATTLE_END);
       return;
     }
 
@@ -125,35 +123,37 @@ export class BattleSimulationProcessor {
   private filterSquads() {
     const filterUnitsVisitor = new FilterInActiveUnitsVisitor();
 
-    Object.values(this.squads).forEach(squad => filterUnitsVisitor.filterInActiveUnits(...squad));
-    // filterUnitsVisitor.filterInActiveUnits(...this.enemySquads);
-    // filterUnitsVisitor.filterInActiveUnits(...this.allySquads);
-
-    // this.enemySquads = this.enemySquads.filter(squad => !!squad.units.length);
-    // this.allySquads = this.allySquads.filter(squad => !!squad.units.length);
+    const composedSquads = Object.values(this.squads);
+    composedSquads.forEach(squad => filterUnitsVisitor.filterInActiveUnits(...squad));
   }
 
   private findStrongestSquadIndex(side: string): number {
-    const temp = {};
+    const squadHealthPointsForEachSquad = {};
 
     this.squads[side].forEach((squad, index) => {
-      temp[index] = squad.getTotalHealthPoints();
+      squadHealthPointsForEachSquad[index] = squad.getTotalHealthPoints();
     });
 
-    const maxHealthPoints = Math.max(...(Object.values(temp) as number[]));
+    const mappedSquadHealthPoints: number[] = Object.values(squadHealthPointsForEachSquad);
+    const maxHealthPoints = Math.max(...mappedSquadHealthPoints);
 
-    return Object.entries(temp).findIndex(entry => entry[1] === maxHealthPoints);
+    return Object.entries(squadHealthPointsForEachSquad).findIndex(
+      entry => entry[1] === maxHealthPoints,
+    );
   }
 
   private findWeakestSquadIndex(side: string): number {
-    const temp = {};
+    const squadHealthPointsForEachSquad = {};
 
     this.squads[side].forEach((squad, index) => {
-      temp[index] = squad.getTotalHealthPoints();
+      squadHealthPointsForEachSquad[index] = squad.getTotalHealthPoints();
     });
 
-    const minHealthPoints = Math.min(...(Object.values(temp) as number[]));
+    const mappedSquadHealthPoints: number[] = Object.values(squadHealthPointsForEachSquad);
+    const minHealthPoints = Math.min(...mappedSquadHealthPoints);
 
-    return Object.entries(temp).findIndex(entry => entry[1] === minHealthPoints);
+    return Object.entries(squadHealthPointsForEachSquad).findIndex(
+      entry => entry[1] === minHealthPoints,
+    );
   }
 }

@@ -4,13 +4,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { VehicleRepository } from './repositories/vehicle.repository';
 import { LoggerService } from '../../logger/logger.service';
 import { CreateVehicleDto } from './DTOs/createVehicle.dto';
-import { User } from '../../entities/user.entity';
 import { PolicyDto } from '../access-control/DTOs/policy.dto';
 import { ResourceNameEnum } from '../../enums/resource-name.enum';
 import { AccessControlService } from '../access-control/access-control.service';
 import { CreatePolicyDto } from '../access-control/DTOs/create-policy.dto';
-import { SquadNotFoundError } from '../../errors/squad-not-found.error';
 import { ConfigsService } from '../configs/configs.service';
+import { VehicleNotFoundError } from '../../errors/vehicle-not-found.error';
 
 @Injectable()
 export class VehiclesService {
@@ -23,6 +22,10 @@ export class VehiclesService {
     private readonly accessControlService: AccessControlService,
     private readonly logger: LoggerService,
   ) {}
+
+  public async getVehicles(squadId: number): Promise<Vehicle[]> {
+    return await this.vehicleRepository.find({ squadId });
+  }
 
   public async getVehicle(vehicleId: number): Promise<Vehicle> {
     try {
@@ -37,21 +40,12 @@ export class VehiclesService {
         this.loggerContext,
       );
 
-      throw new Error('Vehicle not found');
+      throw new VehicleNotFoundError(vehicleId);
     }
   }
 
-  public async createVehicle(createVehicleDto: CreateVehicleDto, user: User): Promise<Vehicle> {
+  public async createVehicle(createVehicleDto: CreateVehicleDto): Promise<Vehicle> {
     const { squadId } = createVehicleDto;
-
-    const policy: PolicyDto = {
-      resourceOwnerName: ResourceNameEnum.USERS,
-      resourceOwnerId: user.id,
-      resourceName: ResourceNameEnum.SQUADS,
-      resourceId: squadId,
-    };
-
-    await this.accessControlService.checkAccessOrFail(policy);
 
     await this.configService.validateNumberOfUnitsPerSquadOrFail(squadId);
 
@@ -61,7 +55,6 @@ export class VehiclesService {
     try {
       createdVehicle = this.vehicleRepository.create({
         ...createVehicleDto,
-        squad: { id: squadId },
       });
 
       savedVehicle = await this.vehicleRepository.save(createdVehicle);
@@ -79,9 +72,9 @@ export class VehiclesService {
     }
 
     const newPolicy: CreatePolicyDto = {
-      resourceOwnerName: ResourceNameEnum.SQUADS,
-      resourceOwnerId: squadId,
-      resourceName: ResourceNameEnum.VEHICLES,
+      resourceOwnerName: ResourceNameEnum.SQUAD,
+      resourceOwnerId: savedVehicle.squadId,
+      resourceName: ResourceNameEnum.VEHICLE,
       resourceId: savedVehicle.id,
     };
 
@@ -103,7 +96,7 @@ export class VehiclesService {
         error.stack,
         this.loggerContext,
       );
-      throw new SquadNotFoundError(vehicleId);
+      throw new VehicleNotFoundError(vehicleId);
     }
 
     try {
@@ -120,19 +113,11 @@ export class VehiclesService {
     }
 
     const newPolicy: PolicyDto = {
-      resourceOwnerName: ResourceNameEnum.SQUADS,
+      resourceOwnerName: ResourceNameEnum.SQUAD,
       resourceOwnerId: vehicle.squadId,
-      resourceName: ResourceNameEnum.VEHICLES,
+      resourceName: ResourceNameEnum.VEHICLE,
       resourceId: vehicle.id,
     };
-
-    this.logger.debug(
-      {
-        message: `policy`,
-        vehicle,
-      },
-      this.loggerContext,
-    );
 
     await this.accessControlService.removeAccessRuleOnDeletedUnit(newPolicy);
 

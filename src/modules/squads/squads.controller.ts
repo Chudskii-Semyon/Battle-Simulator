@@ -1,12 +1,10 @@
-import { Controller, Post, Body, UseGuards, Get, Param, Delete, HttpCode } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
 import { LoggerService } from '../../logger/logger.service';
 import { SquadsService } from './squads.service';
 import { CreateSquadDto } from './DTOs/create-squad.dto';
-import { Squad } from '../../entities/squad';
+import { Squad } from '../../entities/squad.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ResourceAccessGuard } from '../access-control/guards/resource-access.guard';
-import { WithUser } from '../common/decorators/with-user.decorator';
-import { User } from '../../entities/user.entity';
 
 @Controller('squads')
 @UseGuards(JwtAuthGuard, ResourceAccessGuard)
@@ -18,8 +16,20 @@ export class SquadsController {
     private readonly squadsService: SquadsService,
   ) {}
 
-  @Get(':id')
-  public async getSquad(@Param('id') squadId: number): Promise<Squad> {
+  @Get()
+  public async getSquads(@Body('armyId') armyId: number): Promise<Squad[]> {
+    this.logger.debug(
+      {
+        message: `Proceed GetSquads`,
+        armyId,
+      },
+      this.loggerContext,
+    );
+    return this.squadsService.getSquads(armyId);
+  }
+
+  @Get(':squadId')
+  public async getSquad(@Param('squadId') squadId: number): Promise<Squad> {
     this.logger.debug(
       {
         message: `Proceed GetSquad`,
@@ -32,10 +42,7 @@ export class SquadsController {
   }
 
   @Post()
-  public async createSquad(
-    @Body() createSquadDto: CreateSquadDto,
-    @WithUser() user: User,
-  ): Promise<Squad> {
+  public async createSquad(@Body() createSquadDto: CreateSquadDto): Promise<Squad> {
     this.logger.debug(
       {
         message: `Proceed CreateSquad`,
@@ -44,12 +51,12 @@ export class SquadsController {
       this.loggerContext,
     );
 
-    return this.squadsService.createSquad(createSquadDto, user);
+    return this.squadsService.createSquad(createSquadDto);
   }
 
-  @Delete(':id')
+  @Delete(':squadId')
   @HttpCode(204)
-  public async deleteSquad(@Param('id') squadId: number): Promise<void> {
+  public async deleteSquad(@Param('squadId') squadId: number): Promise<void> {
     this.logger.debug(
       {
         message: `Proceed DeleteSquad`,

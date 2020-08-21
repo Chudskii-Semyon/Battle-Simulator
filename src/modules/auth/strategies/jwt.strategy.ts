@@ -1,27 +1,28 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { JwtPayloadDto } from '../DTOs/jwt-payload.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from '../../users/repositories/user.repository';
 import { InvalidAuthTokenError } from '../../../errors/invalid-auth-token.error';
 import { User } from '../../../entities/user.entity';
 import { LoggerService } from '../../../logger/logger.service';
+import { CONFIG_TOKEN } from '../../../config/constants/config.constant';
+import { IConfigSchema } from '../../../config/interfaces/schema.interface';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   private readonly loggerContext = this.constructor.name;
 
   constructor(
+    @Inject(CONFIG_TOKEN)
+    private readonly config: IConfigSchema,
     private readonly logger: LoggerService,
-    @InjectRepository(UserRepository)
     private readonly userRepository: UserRepository,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      // TODO move to config
-      secretOrKey: 'secret',
+      secretOrKey: config.auth.secret,
     });
   }
 

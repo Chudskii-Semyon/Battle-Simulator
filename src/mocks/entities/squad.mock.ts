@@ -1,4 +1,4 @@
-import { Squad } from '../../entities/squad';
+import { Squad } from '../../entities/squad.entity';
 import { StrategyEnum } from '../../enums/strategy.enum';
 import { mockArmy } from './army.mock';
 

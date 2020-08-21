@@ -4,7 +4,7 @@ import { Unit } from '../composites/interfaces/unit.interface';
 import { Soldier } from '../composites/leafs/soldier.leaf';
 import { Operator } from '../composites/leafs/operator.leaf';
 import { Vehicle } from '../composites/vehicle.composite';
-import { geometricMean, randomRange } from '../../../utils';
+import { geometricMean, randomRange } from '../../../utils/math.util';
 import { sum } from 'lodash';
 
 export class CalculateBaseAttackSuccessVisitor implements Visitor {

@@ -15,7 +15,7 @@ import { ConfigsService } from '../../configs/configs.service';
 import { PolicyDto } from '../../access-control/DTOs/policy.dto';
 import { ResourceNameEnum } from '../../../enums/resource-name.enum';
 import { SquadNotFoundError } from '../../../errors/squad-not-found.error';
-import { mockSquad, mockUser } from '../../../mocks/entities';
+import { mockSquad } from '../../../mocks/entities';
 import {
   mockConfigRepository,
   mockSoldierRepository,
@@ -29,7 +29,6 @@ describe('SquadsService', () => {
   let configsService: ConfigsService;
 
   let addAccessRuleToCreatedUnitSpy: jest.SpyInstance<Promise<boolean>>;
-  let checkAccessOrFailSpy: jest.SpyInstance<Promise<boolean>>;
   let validateNumberOfSquadsPerArmyOrFailSpy: jest.SpyInstance<Promise<boolean>>;
   let removeAccessRuleOnDeletedUnitSpy: jest.SpyInstance<Promise<boolean>>;
 
@@ -58,9 +57,6 @@ describe('SquadsService', () => {
     addAccessRuleToCreatedUnitSpy = jest
       .spyOn(accessControlService, 'addAccessRuleToCreatedUnit')
       .mockResolvedValue(true);
-    checkAccessOrFailSpy = jest
-      .spyOn(accessControlService, 'checkAccessOrFail')
-      .mockResolvedValue(false);
     removeAccessRuleOnDeletedUnitSpy = jest.spyOn(
       accessControlService,
       'removeAccessRuleOnDeletedUnit',
@@ -75,6 +71,18 @@ describe('SquadsService', () => {
     expect(service).toBeDefined();
   });
 
+  describe('getSquads', function() {
+    it('should return found squads', async function() {
+      const query = { armyId: mockSquad.armyId };
+
+      const result = await service.getSquads(mockSquad.armyId);
+      const expectedResult = [mockSquad, mockSquad];
+
+      expect(mockSquadRepository.find).toBeCalledWith(query);
+      expect(result).toStrictEqual(expectedResult);
+    });
+  });
+
   describe('createSquad', function() {
     let createSquadDto: CreateSquadDto;
 
@@ -86,32 +94,19 @@ describe('SquadsService', () => {
       };
     });
 
-    it('should check user access to army', async function() {
-      await service.createSquad(createSquadDto, mockUser);
-
-      const policy: PolicyDto = {
-        resourceOwnerName: ResourceNameEnum.USERS,
-        resourceOwnerId: mockUser.id,
-        resourceName: ResourceNameEnum.ARMIES,
-        resourceId: createSquadDto.armyId,
-      };
-
-      expect(checkAccessOrFailSpy).toBeCalledWith(policy);
-    });
-
     it('should validate number of squad before squad creation', async function() {
-      await service.createSquad(createSquadDto, mockUser);
+      await service.createSquad(createSquadDto);
 
       expect(validateNumberOfSquadsPerArmyOrFailSpy).toBeCalledWith(createSquadDto.armyId);
     });
 
     it('should add access policy', async function() {
-      await service.createSquad(createSquadDto, mockUser);
+      await service.createSquad(createSquadDto);
 
       const policy: PolicyDto = {
-        resourceOwnerName: ResourceNameEnum.ARMIES,
+        resourceOwnerName: ResourceNameEnum.ARMY,
         resourceOwnerId: mockSquad.armyId,
-        resourceName: ResourceNameEnum.SQUADS,
+        resourceName: ResourceNameEnum.SQUAD,
         resourceId: mockSquad.id,
       };
 
@@ -119,7 +114,7 @@ describe('SquadsService', () => {
     });
 
     it('should create squad', async function() {
-      const result = await service.createSquad(createSquadDto, mockUser);
+      const result = await service.createSquad(createSquadDto);
       expect(result).toBe(mockSquad);
     });
   });
@@ -181,9 +176,9 @@ describe('SquadsService', () => {
       await service.deleteSquad(squadId);
 
       const policy: PolicyDto = {
-        resourceOwnerName: ResourceNameEnum.ARMIES,
+        resourceOwnerName: ResourceNameEnum.ARMY,
         resourceOwnerId: mockSquad.armyId,
-        resourceName: ResourceNameEnum.SQUADS,
+        resourceName: ResourceNameEnum.SQUAD,
         resourceId: squadId,
       };
 

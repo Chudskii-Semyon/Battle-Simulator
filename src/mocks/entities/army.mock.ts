@@ -1,5 +1,5 @@
-import { Army } from '../../entities/army.entity';
 import { mockUser } from './user.mock';
+import { Army } from '../../entities/army.entity';
 
 export const mockArmy = {
   id: 1,

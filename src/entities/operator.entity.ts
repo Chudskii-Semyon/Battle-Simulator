@@ -1,8 +1,16 @@
-import { BaseEntity, Column, Entity, ManyToOne, PrimaryGeneratedColumn, RelationId } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  RelationId,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Vehicle } from './vehicle.entity';
 
 @Entity()
-export class Operator extends BaseEntity {
+export class Operator {
   @PrimaryGeneratedColumn()
   public id: number;
 
@@ -12,7 +20,7 @@ export class Operator extends BaseEntity {
   @Column({ width: 3, default: 100 })
   public healthPoints: number;
 
-  @Column({ width: 4, default: 2000 })
+  @Column({ width: 4, default: 1500 })
   public recharge: number;
 
   @Column()
@@ -21,4 +29,10 @@ export class Operator extends BaseEntity {
 
   @ManyToOne(type => Vehicle, { onDelete: 'CASCADE' })
   public vehicle: Vehicle;
+
+  @CreateDateColumn()
+  public createdAt: Date;
+
+  @UpdateDateColumn()
+  public updatedAt: Date;
 }

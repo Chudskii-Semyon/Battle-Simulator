@@ -1,9 +1,7 @@
-import { Controller, Post, Body, UseGuards, Get, Param } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
 import { LoggerService } from '../../logger/logger.service';
 import { VehiclesService } from './vehicles.service';
 import { CreateVehicleDto } from './DTOs/createVehicle.dto';
-import { WithUser } from '../common/decorators/with-user.decorator';
-import { User } from '../../entities/user.entity';
 import { Vehicle } from '../../entities/vehicle.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ResourceAccessGuard } from '../access-control/guards/resource-access.guard';
@@ -18,8 +16,20 @@ export class VehiclesController {
     private readonly logger: LoggerService,
   ) {}
 
-  @Get(':id')
-  public async getVehicle(@Param('id') vehicleId: number): Promise<Vehicle> {
+  @Get()
+  public async getVehicles(@Body('squadId') squadId: number): Promise<Vehicle[]> {
+    this.logger.debug(
+      {
+        message: `Proceed GetVehicles`,
+        squadId,
+      },
+      this.loggerContext,
+    );
+    return this.vehiclesService.getVehicles(squadId);
+  }
+
+  @Get(':vehicleId')
+  public async getVehicle(@Param('vehicleId') vehicleId: number): Promise<Vehicle> {
     this.logger.debug(
       {
         message: `Proceed GetVehicle`,
@@ -32,19 +42,29 @@ export class VehiclesController {
   }
 
   @Post()
-  public async createVehicle(
-    @Body() createVehicleDto: CreateVehicleDto,
-    @WithUser() user: User,
-  ): Promise<Vehicle> {
+  public async createVehicle(@Body() createVehicleDto: CreateVehicleDto): Promise<Vehicle> {
     this.logger.debug(
       {
         message: `Proceed CreateVehicle`,
         createVehicleDto,
-        user,
       },
       this.loggerContext,
     );
 
-    return this.vehiclesService.createVehicle(createVehicleDto, user);
+    return this.vehiclesService.createVehicle(createVehicleDto);
+  }
+
+  @Delete(':vehicleId')
+  @HttpCode(204)
+  public async deleteVehicle(@Param('vehicleId') vehicleId: number): Promise<void> {
+    this.logger.debug(
+      {
+        message: `Proceed DeleteVehicle`,
+        vehicleId,
+      },
+      this.loggerContext,
+    );
+
+    await this.vehiclesService.deleteVehicle(vehicleId);
   }
 }

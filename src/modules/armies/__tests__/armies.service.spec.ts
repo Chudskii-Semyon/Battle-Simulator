@@ -59,12 +59,11 @@ describe('ArmiesService', () => {
       await service.createArmy(createArmyDto, mockUser);
 
       const newPolicy: PolicyDto = {
-        resourceOwnerName: ResourceNameEnum.USERS,
+        resourceOwnerName: ResourceNameEnum.USER,
         resourceOwnerId: mockUser.id,
-        resourceName: ResourceNameEnum.ARMIES,
+        resourceName: ResourceNameEnum.ARMY,
         resourceId: mockArmy.id,
       };
-      //
       expect(addAccessRuleToCreatedUnitSpy).toBeCalledWith(newPolicy);
     });
   });
@@ -107,9 +106,9 @@ describe('ArmiesService', () => {
       await service.deleteArmy(mockArmy.id, mockUser);
 
       const policyToDelete: PolicyDto = {
-        resourceOwnerName: ResourceNameEnum.USERS,
+        resourceOwnerName: ResourceNameEnum.USER,
         resourceOwnerId: mockUser.id,
-        resourceName: ResourceNameEnum.ARMIES,
+        resourceName: ResourceNameEnum.ARMY,
         resourceId: mockArmy.id,
       };
 

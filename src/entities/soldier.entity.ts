@@ -1,8 +1,16 @@
-import { BaseEntity, Column, Entity, ManyToOne, PrimaryGeneratedColumn, RelationId } from 'typeorm';
-import { Squad } from './squad';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  RelationId,
+  UpdateDateColumn,
+} from 'typeorm';
+import { Squad } from './squad.entity';
 
 @Entity()
-export class Soldier extends BaseEntity {
+export class Soldier {
   @PrimaryGeneratedColumn()
   public id: number;
 
@@ -12,7 +20,7 @@ export class Soldier extends BaseEntity {
   @Column({ default: 100 })
   public healthPoints: number;
 
-  @Column({ default: 2000 })
+  @Column({ default: 1500 })
   public recharge: number;
 
   @Column()
@@ -21,4 +29,10 @@ export class Soldier extends BaseEntity {
 
   @ManyToOne(type => Squad, { onDelete: 'CASCADE' })
   public squad: Squad;
+
+  @CreateDateColumn()
+  public createdAt: Date;
+
+  @UpdateDateColumn()
+  public updatedAt: Date;
 }

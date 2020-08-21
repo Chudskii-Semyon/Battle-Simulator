@@ -4,14 +4,13 @@ import { Soldier } from '../../entities/soldier.entity';
 import { SoldierRepository } from './repositories/soldier.repository';
 import { AccessControlService } from '../access-control/access-control.service';
 import { CreateSoldierDto } from './DTOs/createSoldier.dto';
-import { User } from '../../entities/user.entity';
 import { PolicyDto } from '../access-control/DTOs/policy.dto';
 import { ResourceNameEnum } from '../../enums/resource-name.enum';
 import { CreatePolicyDto } from '../access-control/DTOs/create-policy.dto';
-import { SquadNotFoundError } from '../../errors/squad-not-found.error';
 import { ConfigRepository } from '../configs/repositories/config.repository';
 import { ConfigsService } from '../configs/configs.service';
 import { SoldierNotFoundError } from '../../errors/soldier-not-found.error';
+import { CouldNotCreateSoldierError } from '../../errors/could-not-create-soldier.error';
 
 @Injectable()
 export class SoldiersService {
@@ -25,9 +24,13 @@ export class SoldiersService {
     private readonly logger: LoggerService,
   ) {}
 
+  public async getSoldiers(squadId: number): Promise<Soldier[]> {
+    return await this.soldierRepository.find({ squadId });
+  }
+
   public async getSoldier(soldierId: number): Promise<Soldier> {
     try {
-      return this.soldierRepository.findOneOrFail(soldierId);
+      return await this.soldierRepository.findOneOrFail(soldierId);
     } catch (error) {
       this.logger.error(
         {
@@ -41,17 +44,9 @@ export class SoldiersService {
     }
   }
 
-  public async createSoldier(createSoldierDto: CreateSoldierDto, user: User): Promise<Soldier> {
+  public async createSoldier(createSoldierDto: CreateSoldierDto): Promise<Soldier> {
     const { squadId } = createSoldierDto;
 
-    const policy: PolicyDto = {
-      resourceOwnerName: ResourceNameEnum.USERS,
-      resourceOwnerId: user.id,
-      resourceName: ResourceNameEnum.SQUADS,
-      resourceId: squadId,
-    };
-
-    await this.accessControlService.checkAccessOrFail(policy);
     await this.configService.validateNumberOfUnitsPerSquadOrFail(squadId);
 
     let createdSoldier: Soldier;
@@ -72,19 +67,17 @@ export class SoldiersService {
         {
           message: `Could not create soldier. Error: ${error}`,
           createSoldierDto,
-          user,
         },
         error.stack,
         this.loggerContext,
       );
-      // TODO create error
-      throw new Error('could not create soldier');
+      throw new CouldNotCreateSoldierError();
     }
 
     const newPolicy: CreatePolicyDto = {
-      resourceOwnerName: ResourceNameEnum.SQUADS,
+      resourceOwnerName: ResourceNameEnum.SQUAD,
       resourceOwnerId: squadId,
-      resourceName: ResourceNameEnum.SOLDIERS,
+      resourceName: ResourceNameEnum.SOLDIER,
       resourceId: savedSoldier.id,
     };
 
@@ -106,7 +99,7 @@ export class SoldiersService {
         error.stack,
         this.loggerContext,
       );
-      throw new SquadNotFoundError(soldierId);
+      throw new SoldierNotFoundError(soldierId);
     }
 
     try {
@@ -123,9 +116,9 @@ export class SoldiersService {
     }
 
     const newPolicy: PolicyDto = {
-      resourceOwnerName: ResourceNameEnum.SQUADS,
+      resourceOwnerName: ResourceNameEnum.SQUAD,
       resourceOwnerId: soldier.squadId,
-      resourceName: ResourceNameEnum.SOLDIERS,
+      resourceName: ResourceNameEnum.SOLDIER,
       resourceId: soldier.id,
     };
 

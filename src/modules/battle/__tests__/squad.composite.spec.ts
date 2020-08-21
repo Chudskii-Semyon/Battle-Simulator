@@ -8,7 +8,7 @@ import { GetHealthPointsVisitor } from '../visitors/get-health-points.visitior';
 import { CalculateBaseAttackSuccessVisitor } from '../visitors/calculate-base-attack-success.visitor';
 import { CalculateBaseAttackDamageVisitor } from '../visitors/calculate-base-attack-damage.visitior';
 import { InflictBaseDamageVisitor } from '../visitors/inflict-base-damage.visitor';
-import { geometricMean, randomRange } from '../../../utils';
+import { geometricMean, randomRange } from '../../../utils/math.util';
 import { UnitLevelUpVisitor } from '../visitors/unit-level-up.visitor';
 import { CalculateRechargeTimeVisitor } from '../visitors/calculate-recharge-time.visitor';
 import { FilterInActiveUnitsVisitor } from '../visitors/filter-inactive-units.visitor';
@@ -29,7 +29,8 @@ describe('SquadComposite', () => {
   });
 
   beforeEach(() => {
-    mockSquad = new Squad(StrategyEnum.RANDOM);
+    mockSquad = new Squad(1, StrategyEnum.RANDOM);
+    // mockSquad = new Squad(StrategyEnum.RANDOM);
     mockVehicle = new Vehicle(createUnitDto);
     mockSoldier = new Soldier(createUnitDto);
     mockOperator = new Operator(createUnitDto);

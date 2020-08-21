@@ -47,35 +47,13 @@ export class AccessControlService extends Enforcer {
     const role = this.buildRole(resourceName, resourceId);
     const permissionsOfResource = await this.enforcer.getImplicitPermissionsForUser(role);
     await this.enforcer.deleteRolesForUser(role);
-    const rolesOfResource = await this.enforcer.getImplicitRolesForUser(role);
-
-    this.logger.debug(
-      {
-        message: `p`,
-        permissionsOfResource,
-        rolesOfResource,
-        role,
-        owner,
-        resource,
-        actions,
-      },
-      this.loggerContext,
-    );
+    // const rolesOfResource = await this.enforcer.getImplicitRolesForUser(role);
 
     await this.enforcer.removePolicies(permissionsOfResource);
     await this.enforcer.removePolicy(owner, resource, actions);
 
     const sub = this.buildRole(resourceOwnerName, resourceOwnerId);
     const obj = this.buildRole(resourceName, resourceId);
-
-    this.logger.debug(
-      {
-        message: `g`,
-        sub,
-        obj,
-      },
-      this.loggerContext,
-    );
 
     await this.enforcer.removeGroupingPolicy(sub, obj);
 
@@ -109,7 +87,7 @@ export class AccessControlService extends Enforcer {
     return true;
   }
 
-  public async reloadPolicy() {
+  public async reloadPolicy(): Promise<void> {
     await this.enforcer.loadPolicy();
   }
 
@@ -279,8 +257,6 @@ export class AccessControlService extends Enforcer {
   private buildResource(name: ResourceNameEnum, id: number): string {
     return `resource:${name}/${id}`;
   }
-
-  // TODO: edit this in adapter to make it query from database
 
   private buildRole(name: ResourceNameEnum, id: number): string {
     return `role:${name}/${id}`;

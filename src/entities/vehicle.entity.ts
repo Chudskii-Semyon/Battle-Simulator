@@ -1,17 +1,18 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
+  CreateDateColumn,
+  Entity,
   ManyToOne,
-  BaseEntity,
-  RelationId,
   OneToMany,
+  PrimaryGeneratedColumn,
+  RelationId,
+  UpdateDateColumn,
 } from 'typeorm';
-import { Squad } from './squad';
+import { Squad } from './squad.entity';
 import { Operator } from './operator.entity';
 
 @Entity()
-export class Vehicle extends BaseEntity {
+export class Vehicle {
   @PrimaryGeneratedColumn()
   public id: number;
 
@@ -22,7 +23,7 @@ export class Vehicle extends BaseEntity {
   public recharge: number;
 
   @OneToMany(
-    type => Operator,
+    () => Operator,
     operator => operator.vehicle,
   )
   public operators: Operator[];
@@ -31,6 +32,12 @@ export class Vehicle extends BaseEntity {
   @RelationId((vehicle: Vehicle) => vehicle.squad)
   public squadId: number;
 
-  @ManyToOne(type => Squad, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Squad, { onDelete: 'CASCADE' })
   public squad: Squad;
+
+  @CreateDateColumn()
+  public createdAt: Date;
+
+  @UpdateDateColumn()
+  public updatedAt: Date;
 }

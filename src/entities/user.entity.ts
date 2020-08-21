@@ -2,13 +2,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-  RelationId,
-  Index,
 } from 'typeorm';
-import { BeforeInsert, ManyToOne } from 'typeorm/index';
-import { Role } from './role.entity';
+import { BeforeInsert } from 'typeorm/index';
 import { genSalt, hash } from 'bcrypt';
 import { Exclude } from 'class-transformer';
 
@@ -28,18 +26,6 @@ export class User {
   @Exclude()
   @Column()
   public password: string;
-
-  @Exclude()
-  @ManyToOne(
-    type => Role,
-    role => role.users,
-    { nullable: false },
-  )
-  public role: Role;
-
-  @Exclude()
-  @RelationId((user: User) => user.role)
-  public roleId: number;
 
   @CreateDateColumn()
   public created_at: Date;

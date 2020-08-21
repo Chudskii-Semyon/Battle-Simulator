@@ -1,32 +1,36 @@
 import { Injectable } from '@nestjs/common';
 import { Operator } from '../../entities/operator.entity';
-import { InjectRepository } from '@nestjs/typeorm';
 import { OperatorRepository } from './repositories/operator.repository';
 import { LoggerService } from '../../logger/logger.service';
 import { AccessControlService } from '../access-control/access-control.service';
-import { User } from '../../entities/user.entity';
 import { PolicyDto } from '../access-control/DTOs/policy.dto';
 import { ResourceNameEnum } from '../../enums/resource-name.enum';
-import { ForbiddenResourceError } from '../../errors/forbidden-resource.error';
-import { CouldNotCreateSquadError } from '../../errors/could-not-create-squad.error';
 import { CreatePolicyDto } from '../access-control/DTOs/create-policy.dto';
 import { CreateOperatorDto } from './DTOs/create-operator.dto';
-import { SquadNotFoundError } from '../../errors/squad-not-found.error';
-import { Config } from '../../entities/config.entity';
 import { ConfigRepository } from '../configs/repositories/config.repository';
+import { ConfigsService } from '../configs/configs.service';
+import { VehicleRepository } from '../vehicles/repositories/vehicle.repository';
+import { VehicleNotFoundError } from '../../errors/vehicle-not-found.error';
+import { Vehicle } from '../../entities/vehicle.entity';
+import { OperatorNotFoundError } from '../../errors/operator-not-found.error';
+import { CouldNotCreateOperatorError } from '../../errors/could-not-create-operator.error';
 
 @Injectable()
 export class OperatorsService {
   private readonly loggerContext = this.constructor.name;
 
   constructor(
-    @InjectRepository(Operator)
+    private readonly vehicleRepository: VehicleRepository,
     private readonly operatorRepository: OperatorRepository,
-    @InjectRepository(Config)
     private readonly configRepository: ConfigRepository,
+    private readonly configService: ConfigsService,
     private readonly logger: LoggerService,
     private readonly accessControlService: AccessControlService,
   ) {}
+
+  public async getOperators(vehicleId: number): Promise<Operator[]> {
+    return await this.operatorRepository.find({ vehicleId });
+  }
 
   public async getOperator(operatorId: number): Promise<Operator> {
     try {
@@ -40,25 +44,29 @@ export class OperatorsService {
         error.stack,
         this.loggerContext,
       );
-      throw new SquadNotFoundError(operatorId);
+      throw new OperatorNotFoundError(operatorId);
     }
   }
 
-  public async createOperator(createOperatorDto: CreateOperatorDto, user: User): Promise<Operator> {
+  public async createOperator(createOperatorDto: CreateOperatorDto): Promise<Operator> {
     const { vehicleId } = createOperatorDto;
 
-    const policy: PolicyDto = {
-      resourceOwnerName: ResourceNameEnum.USERS,
-      resourceOwnerId: user.id,
-      resourceName: ResourceNameEnum.VEHICLES,
-      resourceId: vehicleId,
-    };
-    const hasAccess = await this.accessControlService.checkAccessOrFail(policy);
-
-    if (!hasAccess) {
-      // TODO log error
-      throw new ForbiddenResourceError();
+    let vehicle: Vehicle;
+    try {
+      vehicle = await this.vehicleRepository.findOneOrFail(vehicleId);
+    } catch (error) {
+      this.logger.error(
+        {
+          message: `Vehicle not found. Error: ${error.message}`,
+          vehicleId,
+        },
+        error.stack,
+        this.loggerContext,
+      );
+      throw new VehicleNotFoundError(vehicleId);
     }
+
+    await this.configService.validateNumberOfUnitsPerSquadOrFail(vehicle.squadId);
 
     let createdOperator: Operator;
     let savedOperator: Operator;
@@ -77,18 +85,17 @@ export class OperatorsService {
         {
           message: `Could not create operator. Error: ${error.message}`,
           createOperatorDto,
-          user,
         },
         error.stack,
         this.loggerContext,
       );
-      throw new CouldNotCreateSquadError();
+      throw new CouldNotCreateOperatorError();
     }
 
     const newPolicy: CreatePolicyDto = {
-      resourceOwnerName: ResourceNameEnum.VEHICLES,
+      resourceOwnerName: ResourceNameEnum.VEHICLE,
       resourceOwnerId: vehicleId,
-      resourceName: ResourceNameEnum.OPERATORS,
+      resourceName: ResourceNameEnum.OPERATOR,
       resourceId: savedOperator.id,
     };
 
@@ -110,7 +117,7 @@ export class OperatorsService {
         error.stack,
         this.loggerContext,
       );
-      throw new SquadNotFoundError(operatorId);
+      throw new OperatorNotFoundError(operatorId);
     }
 
     try {
@@ -127,9 +134,9 @@ export class OperatorsService {
     }
 
     const newPolicy: PolicyDto = {
-      resourceOwnerName: ResourceNameEnum.VEHICLES,
+      resourceOwnerName: ResourceNameEnum.VEHICLE,
       resourceOwnerId: operator.vehicleId,
-      resourceName: ResourceNameEnum.OPERATORS,
+      resourceName: ResourceNameEnum.OPERATOR,
       resourceId: operator.id,
     };
 

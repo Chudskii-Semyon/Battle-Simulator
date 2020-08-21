@@ -1,24 +1,21 @@
 import {
+  Column,
   CreateDateColumn,
   Entity,
   JoinColumn,
   OneToMany,
   OneToOne,
+  PrimaryGeneratedColumn,
   RelationId,
   UpdateDateColumn,
 } from 'typeorm';
-import { Column, PrimaryGeneratedColumn } from 'typeorm/index';
-import { StrategyEnum } from '../enums/strategy.enum';
 import { User } from './user.entity';
-import { Squad } from './squad';
+import { Squad } from './squad.entity';
 
 @Entity()
 export class Army {
   @PrimaryGeneratedColumn()
   public id: number;
-
-  // @Column({ type: 'enum', enum: StrategyEnum, default: StrategyEnum.RANDOM })
-  // public strategy: StrategyEnum;
 
   @Column()
   @RelationId((army: Army) => army.user)

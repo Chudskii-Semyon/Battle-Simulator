@@ -1,11 +1,9 @@
-import { Controller, UseGuards, Post, Body, Get, Param, Delete, HttpCode } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
 import { OperatorsService } from './operators.service';
 import { LoggerService } from '../../logger/logger.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ResourceAccessGuard } from '../access-control/guards/resource-access.guard';
 import { CreateOperatorDto } from './DTOs/create-operator.dto';
-import { WithUser } from '../common/decorators/with-user.decorator';
-import { User } from '../../entities/user.entity';
 import { Operator } from '../../entities/operator.entity';
 
 @Controller('operators')
@@ -18,8 +16,19 @@ export class OperatorsController {
     private readonly operatorsService: OperatorsService,
   ) {}
 
-  @Get(':id')
-  public async getOperator(@Param('id') operatorId: number): Promise<Operator> {
+  @Get()
+  public async getOperators(@Body('vehicleId') vehicleId: number): Promise<Operator[]> {
+    this.logger.debug(
+      {
+        message: `Proceed GetOperators`,
+      },
+      this.loggerContext,
+    );
+    return this.operatorsService.getOperators(vehicleId);
+  }
+
+  @Get(':operatorId')
+  public async getOperator(@Param('operatorId') operatorId: number): Promise<Operator> {
     this.logger.debug(
       {
         message: `Proceed GetOperator`,
@@ -31,25 +40,21 @@ export class OperatorsController {
   }
 
   @Post()
-  public async createOperator(
-    @Body() createOperatorDto: CreateOperatorDto,
-    @WithUser() user: User,
-  ): Promise<Operator> {
+  public async createOperator(@Body() createOperatorDto: CreateOperatorDto): Promise<Operator> {
     this.logger.debug(
       {
         message: `Proceed CreateOperator`,
         createOperatorDto,
-        user,
       },
       this.loggerContext,
     );
 
-    return this.operatorsService.createOperator(createOperatorDto, user);
+    return this.operatorsService.createOperator(createOperatorDto);
   }
 
-  @Delete(':id')
+  @Delete(':operatorId')
   @HttpCode(204)
-  public async deleteOperator(@Param('id') operatorId: number): Promise<void> {
+  public async deleteOperator(@Param('operatorId') operatorId: number): Promise<void> {
     this.logger.debug(
       {
         message: `Proceed DeleteOperator`,

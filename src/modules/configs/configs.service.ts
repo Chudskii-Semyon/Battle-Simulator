@@ -29,7 +29,7 @@ export class ConfigsService {
     );
 
     const numberOfVehicles = await this.vehicleRepository.countVehiclesBySquadId(squadId);
-    const numberOfSoldiers = await this.soldierRepository.countSoldiersByArmyId(squadId);
+    const numberOfSoldiers = await this.soldierRepository.countSoldiersBySquadId(squadId);
     const config = await this.configRepository.findActiveConfig();
 
     const numberOfUnitsPerSquad = numberOfSoldiers + numberOfVehicles;
