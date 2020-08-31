@@ -1,7 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './DTOs/signup.dto';
-import { User } from '../../entities/user.entity';
 import { LoggerService } from '../../logger/logger.service';
 import { SignInDto } from './DTOs/signin.dto';
 import { AuthDto } from './DTOs/auth.dto';
@@ -13,7 +12,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService, private readonly logger: LoggerService) {}
 
   @Post('signup')
-  public async signUp(@Body() signUpDto: SignUpDto): Promise<User> {
+  public async signUp(@Body() signUpDto: SignUpDto): Promise<AuthDto> {
     this.logger.debug(
       {
         message: 'Got signup input',

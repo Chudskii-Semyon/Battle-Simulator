@@ -24,9 +24,12 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  public async signUp(signUpDto: SignUpDto): Promise<User> {
+  public async signUp(signUpDto: SignUpDto): Promise<AuthDto> {
     const createUserDto = plainToClass(CreateUserDto, signUpDto);
-    return this.usersService.createUser(createUserDto);
+
+    const createdUser = await this.usersService.createUser(createUserDto);
+
+    return this.buildAuthDto(createdUser);
   }
 
   public async signIn(signInDto: SignInDto): Promise<AuthDto> {
@@ -58,6 +61,10 @@ export class AuthService {
       throw new CouldNotAuthenticateUserError();
     }
 
-    return plainToClass(AuthDto, { token: this.jwtService.sign({ sub: user.id }) });
+    return this.buildAuthDto(user);
+  }
+
+  private buildAuthDto(user): AuthDto {
+    return plainToClass(AuthDto, { user, token: this.jwtService.sign({ sub: user.id }) });
   }
 }

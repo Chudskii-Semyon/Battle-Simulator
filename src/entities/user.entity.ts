@@ -28,10 +28,10 @@ export class User {
   public password: string;
 
   @CreateDateColumn()
-  public created_at: Date;
+  public createdAt: Date;
 
   @UpdateDateColumn()
-  public updated_at: Date;
+  public updatedAt: Date;
 
   constructor(partial: Partial<User>) {
     Object.assign(this, partial);
