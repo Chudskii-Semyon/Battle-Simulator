@@ -17,6 +17,7 @@ import { BattleSimulationProcessor } from './processors/battle-simulation.proces
 import { Squads } from './interfaces/squads.interface';
 import { AttackJob } from './jobs/squad-attack.job';
 import { ATTACK_JOB } from './constants/jobs.constant';
+import { BattleStartDto } from './DTOs/battle-start.dto';
 
 @Injectable()
 export class BattleService {
@@ -30,9 +31,9 @@ export class BattleService {
     private readonly logger: LoggerService,
   ) {}
 
-  public async battleStart(enemyArmyId: number, user: User): Promise<void> {
+  public async battleStart(battleStartDto: BattleStartDto, user: User): Promise<void> {
     const armies = await this.armyRepository.find({
-      where: [{ id: enemyArmyId }, { userId: user.id }],
+      where: [{ id: battleStartDto.enemyArmyId }, { userId: user.id }],
       relations: ['squads', 'squads.soldiers', 'squads.vehicles', 'squads.vehicles.operators'],
     });
 

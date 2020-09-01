@@ -11,7 +11,13 @@ import { BattleService } from './battle.service';
 import { UserRepository } from '../users/repositories/user.repository';
 import { BATTLE_START } from './constants/socket-events.constant';
 import { BattleSimulationProcessor } from './processors/battle-simulation.processor';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { WithUser } from '../common/decorators/with-user.decorator';
+import { User } from '../../entities/user.entity';
+import { BattleStartDto } from './DTOs/battle-start.dto';
 
+@UseGuards(JwtAuthGuard)
 @WebSocketGateway()
 export class BattleGateway {
   private readonly loggerContext = this.constructor.name;
@@ -32,9 +38,19 @@ export class BattleGateway {
   }
 
   @SubscribeMessage(BATTLE_START)
-  async battleStart(@MessageBody() data: number): Promise<void> {
-    const user = await this.userRepository.findOneOrFail(1);
+  async battleStart(
+    @MessageBody() battleStartDto: BattleStartDto,
+    @WithUser() user: User,
+  ): Promise<void> {
+    this.logger.debug(
+      {
+        message: `Proceed battle start socket`,
+        battleStartDto,
+        user,
+      },
+      this.loggerContext,
+    );
 
-    await this.battleService.battleStart(5, user);
+    await this.battleService.battleStart(battleStartDto, user);
   }
 }
