@@ -1,7 +1,7 @@
 import {MigrationInterface, QueryRunner} from "typeorm";
 
-export class InitialMigration1598865182095 implements MigrationInterface {
-    name = 'InitialMigration1598865182095'
+export class InitialMigration1598968967184 implements MigrationInterface {
+    name = 'InitialMigration1598968967184'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TABLE "user" ("id" SERIAL NOT NULL, "name" character varying NOT NULL, "email" character varying NOT NULL, "password" character varying NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_cace4a159ff9f2512dd42373760" PRIMARY KEY ("id"))`);
@@ -13,8 +13,9 @@ export class InitialMigration1598865182095 implements MigrationInterface {
         await queryRunner.query(`CREATE TYPE "squad_strategy_enum" AS ENUM('RANDOM', 'WEAKEST', 'STRONGEST')`);
         await queryRunner.query(`CREATE TABLE "squad" ("id" SERIAL NOT NULL, "strategy" "squad_strategy_enum" NOT NULL DEFAULT 'RANDOM', "armyId" integer NOT NULL, "name" character varying NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_90e924b0dbb125f974606646bce" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "army" ("id" SERIAL NOT NULL, "userId" integer NOT NULL, "name" character varying NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "REL_df0660fe9965fe55cbb6423046" UNIQUE ("userId"), CONSTRAINT "PK_7653a2aa639b3639910bc29c4de" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "casbin_rule" ("id" SERIAL NOT NULL, "ptype" character varying NOT NULL, "v0" character varying NOT NULL, "v1" character varying NOT NULL, "v2" character varying, "v3" character varying, "v4" character varying, "v5" character varying, CONSTRAINT "PK_e147354d31e2748a3a5da5e3060" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "config" ("id" SERIAL NOT NULL, "maxHealthPoints" integer NOT NULL DEFAULT 100, "numberOfUnitsPerSquad" integer NOT NULL DEFAULT 12, "numberOfSquadsPerArmy" integer NOT NULL DEFAULT 4, CONSTRAINT "PK_d0ee79a681413d50b0a4f98cf7b" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "config_active" ("configId" integer NOT NULL, CONSTRAINT "UQ_f2130ff4380271b3abd73779d8e" UNIQUE ("configId"), CONSTRAINT "REL_f2130ff4380271b3abd73779d8" UNIQUE ("configId"), CONSTRAINT "PK_f2130ff4380271b3abd73779d8e" PRIMARY KEY ("configId"))`);
+        await queryRunner.query(`CREATE TABLE "config_active" ("id" SERIAL NOT NULL, "configId" integer NOT NULL, CONSTRAINT "UQ_f2130ff4380271b3abd73779d8e" UNIQUE ("configId"), CONSTRAINT "REL_f2130ff4380271b3abd73779d8" UNIQUE ("configId"), CONSTRAINT "PK_df96b069af26c2c6a1ff15f9909" PRIMARY KEY ("id"))`);
         await queryRunner.query(`ALTER TABLE "operator" ADD CONSTRAINT "FK_9bd11e8d1d359df4603a2e5b72d" FOREIGN KEY ("vehicleId") REFERENCES "vehicle"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "vehicle" ADD CONSTRAINT "FK_3e1feebf81fc81805cf570dc1dc" FOREIGN KEY ("squadId") REFERENCES "squad"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "soldier" ADD CONSTRAINT "FK_d5e3ccafa1fc29e8ac45b6869f8" FOREIGN KEY ("squadId") REFERENCES "squad"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
@@ -32,6 +33,7 @@ export class InitialMigration1598865182095 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "operator" DROP CONSTRAINT "FK_9bd11e8d1d359df4603a2e5b72d"`);
         await queryRunner.query(`DROP TABLE "config_active"`);
         await queryRunner.query(`DROP TABLE "config"`);
+        await queryRunner.query(`DROP TABLE "casbin_rule"`);
         await queryRunner.query(`DROP TABLE "army"`);
         await queryRunner.query(`DROP TABLE "squad"`);
         await queryRunner.query(`DROP TYPE "squad_strategy_enum"`);
