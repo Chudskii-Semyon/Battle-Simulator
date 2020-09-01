@@ -18,10 +18,12 @@ import { SquadNotFoundError } from '../../../errors/squad-not-found.error';
 import { mockSquad } from '../../../mocks/entities';
 import {
   mockConfigRepository,
+  mockOperatorRepository,
   mockSoldierRepository,
   mockSquadRepository,
   mockVehicleRepository,
 } from '../../../mocks/repositories';
+import { OperatorRepository } from '../../operators/repositories/operator.repository';
 
 describe('SquadsService', () => {
   let service: SquadsService;
@@ -46,6 +48,8 @@ describe('SquadsService', () => {
       .useValue(mockSoldierRepository)
       .overrideProvider(VehicleRepository)
       .useValue(mockVehicleRepository)
+      .overrideProvider(OperatorRepository)
+      .useValue(mockOperatorRepository)
       .compile();
 
     accessControlService = module.get<AccessControlService>(AccessControlService);

@@ -7,4 +7,5 @@ export const mockVehicle = {
   squadId: mockSquad.id,
   healthPoints: mockConfig.maxHealthPoints,
   recharge: 2000,
+  operators: [],
 } as Vehicle;

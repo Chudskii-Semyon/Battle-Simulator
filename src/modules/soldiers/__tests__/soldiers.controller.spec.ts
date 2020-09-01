@@ -7,6 +7,7 @@ import { SoldiersService } from '../soldiers.service';
 import { LoggerService } from '../../../logger/logger.service';
 import {
   mockConfigRepository,
+  mockOperatorRepository,
   mockSoldierRepository,
   mockSquadRepository,
   mockVehicleRepository,
@@ -17,6 +18,7 @@ import { VehicleRepository } from '../../vehicles/repositories/vehicle.repositor
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { mockSoldier } from '../../../mocks/entities';
 import { CreateSoldierDto } from '../DTOs/createSoldier.dto';
+import { OperatorRepository } from '../../operators/repositories/operator.repository';
 
 describe('Soldiers Controller', () => {
   let controller: SoldiersController;
@@ -38,6 +40,8 @@ describe('Soldiers Controller', () => {
       .useValue(mockConfigRepository)
       .overrideProvider(VehicleRepository)
       .useValue(mockVehicleRepository)
+      .overrideProvider(OperatorRepository)
+      .useValue(mockOperatorRepository)
       .compile();
 
     controller = module.get<SoldiersController>(SoldiersController);

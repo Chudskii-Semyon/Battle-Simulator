@@ -7,6 +7,7 @@ import { SquadsService } from '../squads.service';
 import { LoggerService } from '../../../logger/logger.service';
 import {
   mockConfigRepository,
+  mockOperatorRepository,
   mockSoldierRepository,
   mockSquadRepository,
   mockVehicleRepository,
@@ -18,6 +19,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { mockSquad } from '../../../mocks/entities';
 import { CreateSquadDto } from '../DTOs/create-squad.dto';
 import { StrategyEnum } from '../../../enums/strategy.enum';
+import { OperatorRepository } from '../../operators/repositories/operator.repository';
 
 describe('Squads Controller', () => {
   let controller: SquadsController;
@@ -39,6 +41,8 @@ describe('Squads Controller', () => {
       .useValue(mockSoldierRepository)
       .overrideProvider(VehicleRepository)
       .useValue(mockVehicleRepository)
+      .overrideProvider(OperatorRepository)
+      .useValue(mockOperatorRepository)
       .compile();
 
     controller = module.get<SquadsController>(SquadsController);

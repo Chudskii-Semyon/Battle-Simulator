@@ -17,6 +17,7 @@ import { mockUser } from '../../../mocks/entities';
 import { SignUpDto } from '../DTOs/signup.dto';
 import { AuthDto } from '../DTOs/auth.dto';
 import { SignInDto } from '../DTOs/signin.dto';
+import { mockAuth } from '../../../mocks/entities/auth.mock';
 
 describe('Auth Controller', () => {
   let controller: AuthController;
@@ -55,17 +56,17 @@ describe('Auth Controller', () => {
   });
 
   describe('signUp', function() {
-    it('should return create user', async function() {
+    it('should return created user', async function() {
       const signUpDto: SignUpDto = {
         name: mockUser.name,
         password: mockUser.password,
         email: mockUser.email,
       };
-      const signupSpy = jest.spyOn(service, 'signUp').mockResolvedValueOnce(mockUser);
+      const signupSpy = jest.spyOn(service, 'signUp').mockResolvedValueOnce(mockAuth);
 
       const result = await service.signUp(signUpDto);
 
-      expect(result).toBe(mockUser);
+      expect(result).toBe(mockAuth);
       expect(signupSpy).toBeCalledWith(signUpDto);
     });
   });
@@ -79,6 +80,7 @@ describe('Auth Controller', () => {
 
       const authDto: AuthDto = {
         token: 'mock auth token',
+        user: mockUser,
       };
 
       const signInSpy = jest.spyOn(service, 'signIn').mockResolvedValueOnce(authDto);

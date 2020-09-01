@@ -7,6 +7,7 @@ import { VehicleRepository } from '../repositories/vehicle.repository';
 import { SoldierRepository } from '../../soldiers/repositories/soldier.repository';
 import {
   mockConfigRepository,
+  mockOperatorRepository,
   mockSoldierRepository,
   mockSquadRepository,
   mockVehicleRepository,
@@ -21,6 +22,7 @@ import { PolicyDto } from '../../access-control/DTOs/policy.dto';
 import { ResourceNameEnum } from '../../../enums/resource-name.enum';
 import { CreateVehicleDto } from '../DTOs/createVehicle.dto';
 import { VehicleNotFoundError } from '../../../errors/vehicle-not-found.error';
+import { OperatorRepository } from '../../operators/repositories/operator.repository';
 
 describe('VehiclesService', () => {
   let service: VehiclesService;
@@ -44,6 +46,8 @@ describe('VehiclesService', () => {
       .useValue(mockConfigRepository)
       .overrideProvider(VehicleRepository)
       .useValue(mockVehicleRepository)
+      .overrideProvider(OperatorRepository)
+      .useValue(mockOperatorRepository)
       .compile();
 
     service = module.get<VehiclesService>(VehiclesService);

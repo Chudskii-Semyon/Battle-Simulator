@@ -8,6 +8,7 @@ import { LoggerService } from '../../../logger/logger.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   mockConfigRepository,
+  mockOperatorRepository,
   mockSoldierRepository,
   mockSquadRepository,
   mockVehicleRepository,
@@ -22,6 +23,7 @@ import { ConfigsService } from '../../configs/configs.service';
 import { PolicyDto } from '../../access-control/DTOs/policy.dto';
 import { ResourceNameEnum } from '../../../enums/resource-name.enum';
 import { SoldierNotFoundError } from '../../../errors/soldier-not-found.error';
+import { OperatorRepository } from '../../operators/repositories/operator.repository';
 
 describe('SoldiersService', () => {
   let service: SoldiersService;
@@ -46,6 +48,8 @@ describe('SoldiersService', () => {
       .useValue(mockConfigRepository)
       .overrideProvider(VehicleRepository)
       .useValue(mockVehicleRepository)
+      .overrideProvider(OperatorRepository)
+      .useValue(mockOperatorRepository)
       .compile();
 
     service = module.get<SoldiersService>(SoldiersService);

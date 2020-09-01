@@ -8,6 +8,7 @@ import { LoggerService } from '../../../logger/logger.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   mockConfigRepository,
+  mockOperatorRepository,
   mockSoldierRepository,
   mockSquadRepository,
   mockVehicleRepository,
@@ -15,6 +16,7 @@ import {
 import { mockArmy, mockConfig, mockSquad } from '../../../mocks/entities';
 import { MaxUnitsPerSquadHasBeenReachedError } from '../../../errors/maximum-units-per-squad-has-bean-reached.error';
 import { MaxNumberOfSquadsHasBeenReachedError } from '../../../errors/max-number-of-squads-has-been-reached.error';
+import { OperatorRepository } from '../../operators/repositories/operator.repository';
 
 describe('ConfigsService', () => {
   let service: ConfigsService;
@@ -27,6 +29,7 @@ describe('ConfigsService', () => {
           SquadRepository,
           SoldierRepository,
           VehicleRepository,
+          OperatorRepository,
         ]),
       ],
       providers: [ConfigsService, LoggerService],
@@ -39,7 +42,8 @@ describe('ConfigsService', () => {
       .useValue(mockConfigRepository)
       .overrideProvider(VehicleRepository)
       .useValue(mockVehicleRepository)
-
+      .overrideProvider(OperatorRepository)
+      .useValue(mockOperatorRepository)
       .compile();
 
     service = module.get<ConfigsService>(ConfigsService);
