@@ -1,4 +1,5 @@
 ### Installing
+all users created with seed has password '123456Aa'
 ```
 yarn
 ```
