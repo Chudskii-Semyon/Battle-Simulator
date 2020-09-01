@@ -6,6 +6,7 @@ import { MaxNumberOfSquadsHasBeenReachedError } from '../../errors/max-number-of
 import { VehicleRepository } from '../vehicles/repositories/vehicle.repository';
 import { SoldierRepository } from '../soldiers/repositories/soldier.repository';
 import { MaxUnitsPerSquadHasBeenReachedError } from '../../errors/maximum-units-per-squad-has-bean-reached.error';
+import { OperatorRepository } from '../operators/repositories/operator.repository';
 
 @Injectable()
 export class ConfigsService {
@@ -15,6 +16,7 @@ export class ConfigsService {
     private readonly configRepository: ConfigRepository,
     private readonly squadRepository: SquadRepository,
     private readonly soldierRepository: SoldierRepository,
+    private readonly operatorRepository: OperatorRepository,
     private readonly vehicleRepository: VehicleRepository,
     private readonly logger: LoggerService,
   ) {}
@@ -28,11 +30,22 @@ export class ConfigsService {
       this.loggerContext,
     );
 
+    const squadVehicles = await this.vehicleRepository.find({ squadId });
+    const squadVehiclesIds = squadVehicles.map(vehicle => vehicle.id);
+
     const numberOfVehicles = await this.vehicleRepository.countVehiclesBySquadId(squadId);
     const numberOfSoldiers = await this.soldierRepository.countSoldiersBySquadId(squadId);
+
+    let numberOfOperators = 0;
+    if (squadVehiclesIds.length) {
+      numberOfOperators = await this.operatorRepository.countOperatorsByVehicleIds(
+        ...squadVehiclesIds,
+      );
+    }
+
     const config = await this.configRepository.findActiveConfig();
 
-    const numberOfUnitsPerSquad = numberOfSoldiers + numberOfVehicles;
+    const numberOfUnitsPerSquad = numberOfSoldiers + numberOfVehicles + numberOfOperators;
 
     if (numberOfUnitsPerSquad >= config.numberOfUnitsPerSquad) {
       this.logger.error(

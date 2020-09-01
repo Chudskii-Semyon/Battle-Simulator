@@ -14,6 +14,7 @@ import { VehicleNotFoundError } from '../../errors/vehicle-not-found.error';
 import { Vehicle } from '../../entities/vehicle.entity';
 import { OperatorNotFoundError } from '../../errors/operator-not-found.error';
 import { CouldNotCreateOperatorError } from '../../errors/could-not-create-operator.error';
+import { MaxNumberOfOperatorsPerVehicleReachedError } from '../../errors/max-number-of-operators-per-vehicle-reached.error';
 
 @Injectable()
 export class OperatorsService {
@@ -24,8 +25,8 @@ export class OperatorsService {
     private readonly operatorRepository: OperatorRepository,
     private readonly configRepository: ConfigRepository,
     private readonly configService: ConfigsService,
-    private readonly logger: LoggerService,
     private readonly accessControlService: AccessControlService,
+    private readonly logger: LoggerService,
   ) {}
 
   public async getOperators(vehicleId: number): Promise<Operator[]> {
@@ -53,7 +54,7 @@ export class OperatorsService {
 
     let vehicle: Vehicle;
     try {
-      vehicle = await this.vehicleRepository.findOneOrFail(vehicleId);
+      vehicle = await this.vehicleRepository.findOneOrFail(vehicleId, { relations: ['operators'] });
     } catch (error) {
       this.logger.error(
         {
@@ -64,6 +65,18 @@ export class OperatorsService {
         this.loggerContext,
       );
       throw new VehicleNotFoundError(vehicleId);
+    }
+
+    if (vehicle.operators.length >= 3) {
+      this.logger.error(
+        {
+          message: `Max number of operators per vehicle has been reached`,
+          createOperatorDto,
+        },
+        new Error().stack,
+        this.loggerContext,
+      );
+      throw new MaxNumberOfOperatorsPerVehicleReachedError();
     }
 
     await this.configService.validateNumberOfUnitsPerSquadOrFail(vehicle.squadId);

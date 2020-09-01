@@ -6,6 +6,7 @@ import { SquadRepository } from '../squads/repositories/squad.repository';
 import { LoggerService } from '../../logger/logger.service';
 import { SoldierRepository } from '../soldiers/repositories/soldier.repository';
 import { VehicleRepository } from '../vehicles/repositories/vehicle.repository';
+import { OperatorRepository } from '../operators/repositories/operator.repository';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { VehicleRepository } from '../vehicles/repositories/vehicle.repository';
       SquadRepository,
       SoldierRepository,
       VehicleRepository,
+      OperatorRepository,
     ]),
   ],
   providers: [ConfigsService, LoggerService],
